@@ -439,36 +439,44 @@ class Conversation:
             self._ws = None
 
     def _handle_message(self, message, ws):
+        print(f"[Conversation] Received message: {message}")
         if message["type"] == "conversation_initiation_metadata":
+            print("[Conversation] Handling type: conversation_initiation_metadata")
             event = message["conversation_initiation_metadata_event"]
             assert self._conversation_id is None
             self._conversation_id = event["conversation_id"]
 
         elif message["type"] == "audio":
+            print("[Conversation] Handling type: audio")
             event = message["audio_event"]
             if int(event["event_id"]) <= self._last_interrupt_id:
                 return
             audio = base64.b64decode(event["audio_base_64"])
             self.audio_interface.output(audio)
         elif message["type"] == "agent_response":
+            print("[Conversation] Handling type: agent_response")
             if self.callback_agent_response:
                 event = message["agent_response_event"]
                 self.callback_agent_response(event["agent_response"].strip())
         elif message["type"] == "agent_response_correction":
+            print("[Conversation] Handling type: agent_response_correction")
             if self.callback_agent_response_correction:
                 event = message["agent_response_correction_event"]
                 self.callback_agent_response_correction(
                     event["original_agent_response"].strip(), event["corrected_agent_response"].strip()
                 )
         elif message["type"] == "user_transcript":
+            print("[Conversation] Handling type: user_transcript")
             if self.callback_user_transcript:
                 event = message["user_transcription_event"]
                 self.callback_user_transcript(event["user_transcript"].strip())
         elif message["type"] == "interruption":
+            print("[Conversation] Handling type: interruption")
             event = message["interruption_event"]
             self._last_interrupt_id = int(event["event_id"])
             self.audio_interface.interrupt()
         elif message["type"] == "ping":
+            print("[Conversation] Handling type: ping")
             event = message["ping_event"]
             ws.send(
                 json.dumps(
@@ -481,6 +489,7 @@ class Conversation:
             if self.callback_latency_measurement and event["ping_ms"]:
                 self.callback_latency_measurement(int(event["ping_ms"]))
         elif message["type"] == "client_tool_call":
+            print("[Conversation] Handling type: client_tool_call")
             tool_call = message.get("client_tool_call", {})
             tool_name = tool_call.get("tool_name")
             parameters = {"tool_call_id": tool_call["tool_call_id"], **tool_call.get("parameters", {})}
@@ -491,6 +500,7 @@ class Conversation:
 
             self.client_tools.execute_tool(tool_name, parameters, send_response)
         else:
+            print(f"[Conversation] Ignored message type: {message['type']}")
             pass  # Ignore all other message types.
 
     def _get_wss_url(self):
