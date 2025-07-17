@@ -439,7 +439,7 @@ class Conversation:
             self._ws = None
 
     def _handle_message(self, message, ws):
-        print(f"[Conversation] Received message: {message}")
+        print(f"[Conversation] Received message: {str(message)[:500]}")
         if message["type"] == "conversation_initiation_metadata":
             print("[Conversation] Handling type: conversation_initiation_metadata")
             event = message["conversation_initiation_metadata_event"]
